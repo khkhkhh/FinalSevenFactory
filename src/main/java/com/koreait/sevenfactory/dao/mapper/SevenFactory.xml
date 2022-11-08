@@ -1,0 +1,912 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.koreait.sevenfactory.dao.SevenFactoryDAO">
+
+
+	<!-- 예약가능한 객실 검색하기 -->
+	<select id="selectBookableList"
+		resultType="com.koreait.sevenfactory.dto.HotelDTO">
+		SELECT * FROM HOTEL WHERE HAPPROVAL =1
+	</select>
+
+	<select id="selectMyReservation"
+		resultType="com.koreait.sevenfactory.dto.ReservationDTO">
+		SELECT RNO, R.GNO, R.MNO, RAPPROVAL, RPEOPLE, RPRICE, RCHECKIN, RCHECKOUT,
+		GNAME,R.HNO FROM RESERVATION R, GUESTROOM G WHERE R.GNO = G.GNO AND
+		MNO = #{mNo}
+	</select>
+
+	<delete id="reservationCancle">
+		DELETE FROM RESERVATION WHERE RNO = #{rNo}
+	</delete>
+
+	<select id="selectGuestRoom"
+		resultType="com.koreait.sevenfactory.dto.GuestRoomDTO">
+		SELECT * FROM GUESTROOM WHERE gNo = #{gNo}
+	</select>
+	<!--NMPHONE으로 수정 4개 -->
+	<insert id="kakaopayinsertReservation1">
+		INSERT INTO RESERVATION (RNO, GNO, MNO , HNO, NMPHONE, RAPPROVAL, RPEOPLE,
+		RPRICE, RCHECKIN, RCHECKOUT) VALUES ((SELECT IFNULL(MAX(RNO) + 1, 1)
+		FROM RESERVATION AS re), #{param1}, #{param2}, #{param3}, NULL, 0,
+		#{param4} , #{param5}, #{param6},#{param7})
+	</insert>
+
+	<select id="getblacklist" resultType="String">
+		SELECT MID FROM BLACKLIST WHERE MID = (SELECT MID FROM MEMBER WHERE mNo =
+		#{mNo})
+	</select>
+
+	<update id="usepoint">
+		UPDATE MEMBER SET MPOINT = MPOINT - #{param2} WHERE MNO = #{param1}
+	</update>
+
+	<update id="addpoint">
+		UPDATE MEMBER SET MPOINT = MPOINT + #{param2} WHERE MNO = #{param1}
+	</update>
+
+	<insert id="kakaopayinsertReservation2">
+		INSERT INTO RESERVATION (RNO, GNO, MNO , HNO, NMPHONE, RAPPROVAL, RPEOPLE,
+		RPRICE, RCHECKIN, RCHECKOUT) VALUES ((SELECT IFNULL(MAX(RNO) + 1, 1)
+		FROM RESERVATION AS re), #{param1}, 0 ,#{param2},#{param3},0 ,
+		#{param4} , #{param5}, #{param6},#{param7})
+	</insert>
+
+	<select id="confirmReservation" resultType="Integer">
+		SELECT RNO FROM RESERVATION WHERE GNO = #{param1} AND RCHECKIN = #{param2}
+		AND RCHECKOUT = #{param3}
+	</select>
+
+	<!-- 비회원 예약 정보 가져오기 -->
+	<select id="selectNonmemberReservation"
+		resultType="com.koreait.sevenfactory.dto.ReservationDTO">
+		SELECT R.RNO, R.GNO, R.NMPHONE, R.RAPPROVAL, RPEOPLE, RPRICE, RCHECKIN,
+		RCHECKOUT, GNAME FROM RESERVATION R, GUESTROOM G, NONMEMBER N WHERE
+		R.GNO = G.GNO AND R.NMPHONE = (SELECT NMPHONE FROM NONMEMBER WHERE
+		NMPHONE = #{param2})
+	</select>
+
+	<!-- 비회원 정보 존재 유무 검색 -->
+	<select id="selectNonmemberExistence" resultType="int">
+		SELECT COUNT(*) FROM NONMEMBER WHERE NMPHONE = #{nmPhone}
+	</select>
+
+	<!-- 비회원 정보 저장 -->
+	<insert id="insertNonMember">
+		INSERT INTO NONMEMBER (NMID, NMNAME, NMPHONE) VALUES ((SELECT
+		IFNULL(MAX(NMID) + 1, 1) FROM NONMEMBER AS n), #{param1}, #{param2})
+	</insert>
+
+	<!-- 비회원 예약 취소 -->
+	<delete id="deleteNonMemberReservationNumber"
+		parameterType="int">
+		DELETE FROM RESERVATION WHERE RNO = #{rNo}
+	</delete>
+
+	<!-- 비회원 아이디 가져오기 -->
+	<select id="selectNmId" resultType="String">
+		SELECT NMPHONE FROM NONMEMBER WHERE NMPHONE = #{param1}
+	</select>
+
+	<insert id="registor"
+		parameterType="com.koreait.sevenfactory.dto.MemberDTO">
+   <![CDATA[
+   INSERT INTO MEMBER (MNO, MID, MPW, MNAME, MBIRTH, MPHONE, MEMAIL ,MADDR1, MADDR2, MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT) VALUES ((SELECT IFNULL(MAX(MNO) + 1,1) FROM MEMBER AS m) , #{mId}, #{mPw}, #{mName}, #{mBirth},#{mPhone}, #{mEmail}, #{mAddr1}, #{mAddr2}, #{mZipcode} ,sysdate() ,0,2000,0,0)
+   ]]>
+	</insert>
+
+	<select id="findId"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT MNO, MID, MPW, MNAME, MBIRTH, MPHONE, MEMAIL, MADDR1, MADDR2,
+		MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT FROM MEMBER
+		WHERE MNAME = #{param1} AND MEMAIL = #{param2}
+	</select>
+
+	<select id="idCheck"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT MNO, MID, MPW, MNAME, MBIRTH, MPHONE, MEMAIL, MADDR1, MADDR2,
+		MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT FROM MEMBER
+		WHERE MID = #{mId}
+	</select>
+
+	<select id="emailCheck"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT MNO, MID, MPW, MNAME, MBIRTH, MPHONE, MEMAIL, MADDR1, MADDR2,
+		MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT FROM MEMBER
+		WHERE MEMAIL = #{mEmail}
+	</select>
+
+	<select id="phoneCheck"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT MNO, MID, MPW, MNAME, MBIRTH, MPHONE, MEMAIL, MADDR1, MADDR2,
+		MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT FROM MEMBER
+		WHERE mPhone = #{mPhone}
+	</select>
+
+	<select id="findPw"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT * FROM MEMBER WHERE MID = #{param1} AND MEMAIL =#{param2}
+	</select>
+
+	<update id="changePw">
+		UPDATE MEMBER SET MPW = #{param1} WHERE MID = #{param2}
+	</update>
+
+
+	<select id="login"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT MNO, MID, MPW, MNAME, MBIRTH,MPHONE, MEMAIL, MADDR1, MADDR2,
+		MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT FROM MEMBER
+		WHERE MID = #{param1} AND MPW = #{param2} ORDER BY MNO
+	</select>
+
+	<!-- 호텔 리스트 -->
+	<select id="hotelList"
+		resultType="com.koreait.sevenfactory.dto.HotelDTO">
+		SELECT h.* FROM HOTEL AS h WHERE HAPPROVAL =1
+	</select>
+	<!-- 호텔 정보 -->
+	<select id="hotelinfo"
+		resultType="com.koreait.sevenfactory.dto.HotelDTO" parameterType="int">
+		SELECT * FROM HOTEL WHERE HNO = #{hNo}
+	</select>
+	<!-- 호텔 최저가 -->
+	<select id="hotelminprice" resultType="int">
+		SELECT HMINPRICE FROM HOTEL WHERE HNO=#{hNo}
+	</select>
+
+	<!-- 객실정보 리스트 -->
+	<select id="guestRoomList"
+		resultType="com.koreait.sevenfactory.dto.GuestRoomDTO">
+		SELECT * FROM GUESTROOM WHERE (GNO NOT IN (SELECT GNO FROM RESERVATION
+		WHERE RCHECKIN <![CDATA[<=]]>
+		#{param1} AND RCHECKOUT <![CDATA[>=]]>
+		#{param2})) AND HNO=#{param3}
+	</select>
+	<select id="guestRoomListAll" parameterType="int"
+		resultType="com.koreait.sevenfactory.dto.GuestRoomDTO">
+		SELECT * FROM GUESTROOM WHERE HNO =#{hNo} AND GNO = #{gNo}
+	</select>
+
+	<!-- 객실상세정보 -->
+	<select id="guestRoomView"
+		resultType="com.koreait.sevenfactory.dto.GuestRoomDTO">
+		SELECT * FROM GUESTROOM WHERE HNO=#{hNo}
+	</select>
+
+	<!-- 객실평점구하기 -->
+	<select id="guestRoomRating" resultType="Double">
+		SELECT ROUND(AVG(RRATING), 2) FROM REVIEW WHERE GNAME = #{gName} AND
+		RISDELETE = 1
+	</select>
+
+
+	<!-- 객실평점투표자수구하기 -->
+	<select id="guestRoomRatingVote" resultType="int">
+		SELECT COUNT(*) FROM REVIEW WHERE GNAME = #{gName} AND RISDELETE = 1
+	</select>
+
+	<!-- qna -->
+	<select id="selectQNABoard" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.QNADTO">
+		SELECT A.* FROM QNA AS A WHERE QISDELETE=1 ORDER BY QNO DESC LIMIT
+		#{beginRecord2},5;
+		<!-- QISDELETE 0:삭제 1:존재 -->
+	</select>
+
+
+	<select id="getTotalRecord" resultType="int">
+		SELECT COUNT(*) FROM QNA
+	</select>
+
+	<select id="selectByqNo"
+		resultType="com.koreait.sevenfactory.dto.QNADTO">
+		SELECT QNO, QPW, MID, QTITLE, QCONTENT, QNOTICEDATE FROM QNA WHERE QNO =
+		#{qNo}
+	</select>
+
+	<update id="updateQNABoard">
+		UPDATE QNA SET QTITLE = #{param1}, QCONTENT = #{param2} WHERE QNO =
+		#{param3}
+	</update>
+
+	<update id="deleteQNABoard">
+		UPDATE QNA SET QISDELETE = 0 WHERE QNO = #{qNo}
+	</update>
+
+	<insert id="insertQNABoard1">
+		INSERT INTO QNA (QNO, MID, NMNAME, QTITLE, QPW, QCONTENT, QISDELETE,
+		QNOTICEDATE) VALUES ((SELECT IFNULL(MAX(qNo) + 1, 1) FROM QNA AS q),
+		#{param1}, null , #{param2}, #{param3}, #{param4}, 1, NOW());
+	</insert>
+
+	<insert id="insertQNABoard2">
+		INSERT INTO QNA (QNO, MID, NMNAME, QTITLE, QPW, QCONTENT,
+		QISDELETE,QNOTICEDATE) VALUES ((SELECT IFNULL(MAX(qNo) + 1, 1) FROM
+		QNA AS q), null, #{param1}, #{param2}, #{param3}, #{param4}, 1, NOW())
+	</insert>
+
+	<insert id="insertQNABoardReply">
+		INSERT INTO REPLY (RENO, MID, RECONTENT, QNO, RNO, RECATEGORY, RENOTICEDATE)
+		VALUES ((SELECT IFNULL(MAX(reNo) + 1, 1) FROM REPLY AS r), #{param1},
+		#{param2}, #{param3}, null, 1, CURRENT_TIMESTAMP())
+	</insert>
+
+	<select id="selectQNABoardReply" parameterType="int"
+		resultType="com.koreait.sevenfactory.dto.ReplyDTO">
+		SELECT * FROM REPLY WHERE QNO = #{qNo} ORDER BY RENO ASC
+	</select>
+
+	<delete id="deleteQNABoardReply" parameterType="int">
+		DELETE FROM REPLY WHERE RENO = #{reNo}
+	</delete>
+
+	<update id="updateQNABoardReply">
+		UPDATE REPLY SET RECONTENT = #{param1} WHERE RENO = #{param2}
+	</update>
+
+
+
+	<!-- review -->
+	<insert id="ReviewBoardInsert">
+		INSERT INTO REVIEW (RNO, RTITLE, RCONTENT, MID, RFILENAME, RRATING, GNAME,
+		RISDELETE, RREGDATE) VALUES ((SELECT IFNULL(MAX(RNO) + 1, 1) FROM
+		REVIEW AS r), #{param1}, #{param2}, #{param3}, #{param4}, #{param5},
+		#{param6}, #{param7}, CURRENT_TIMESTAMP())
+	</insert>
+
+	<select id="selectReviewBoardList" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.ReviewDTO">
+		SELECT RNO, RTITLE, RCONTENT, MID, RFILENAME, RRATING, GNAME,
+		RISDELETE, RREGDATE FROM review where RISDELETE=1 ORDER BY RNO DESC
+		LIMIT #{beginRecord2},5
+		<!-- RISDELETE 0:삭제 1:존재 -->
+	</select>
+
+	<select id="selectReviewBoardList2"
+		resultType="com.koreait.sevenfactory.dto.ReviewDTO">
+		SELECT RNO, RTITLE, RCONTENT, MID, RFILENAME, RRATING, GNAME,
+		RISDELETE, RREGDATE FROM review where RISDELETE=1 ORDER BY RRATING
+		DESC;
+		<!-- RISDELETE 0:삭제 1:존재 -->
+	</select>
+
+	<select id="getReviewTotalRecord" resultType="int">
+		SELECT COUNT(*) FROM REVIEW
+	</select>
+
+	<select id="selectReviewBoardByrNo"
+		resultType="com.koreait.sevenfactory.dto.ReviewDTO">
+		SELECT RNO, RTITLE, RCONTENT, MID, RFILENAME, RREGDATE, RRATING, RFILENAME,
+		GNAME FROM REVIEW WHERE RNO = #{rNo}
+	</select>
+
+	<delete id="deleteReviewBoardByrNo">
+		UPDATE REVIEW SET RISDELETE = 0 WHERE RNO = #{rNo}
+	</delete>
+
+	<update id="updateReviewBoardByrNo">
+		UPDATE REVIEW SET RTITLE = #{param1}, RCONTENT = #{param2}, RFILENAME =
+		#{param3}, RRATING = #{param4}, GNAME = #{param5} WHERE RNO =
+		#{param6}
+	</update>
+
+	<insert id="insertReviewBoardReply">
+		INSERT INTO REPLY (RENO, MID, RECONTENT, QNO, RNO, RECATEGORY, RENOTICEDATE)
+		VALUES ((SELECT IFNULL(MAX(RENO) + 1, 1) FROM REPLY AS r), #{param1},
+		#{param2}, null, #{param3}, 0, CURRENT_TIMESTAMP())
+	</insert>
+
+	<select id="selectReviewBoardReply"
+		resultType="com.koreait.sevenfactory.dto.ReplyDTO">
+		SELECT RENO, RNO, MID, RECONTENT FROM REPLY WHERE RNO = #{rNo}
+	</select>
+
+	<delete id="deleteReviewBoardReplyByreNo">
+		DELETE FROM REPLY WHERE RENO = #{reNo}
+	</delete>
+
+	<update id="updateReviewBoardReply">
+		UPDATE REPLY SET RECONTENT = #{param1} WHERE RENO = #{param2}
+	</update>
+	<!-- 수정해야함 -->
+	<select id="selectCheckReviewBoardList" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.ReviewDTO">
+		SELECT * FROM (SET @ROWNUM := 0 SELECT @ROWNUM := @ROWNUM + 1 AS RN, A.*
+		FROM (SELECT * FROM (SELECT @ROWNUM:=0) RN_TB AND REVIEW WHERE
+		RISDELETE =1 AND GNAME = #{gName} ORDER BY RNO DESC) A) WHERE RN
+		BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+
+	<select id="getReviewTotalCheckRecord" resultType="int">
+		SELECT COUNT(*) FROM REVIEW WHERE GNAME = #{gName} AND RISDELETE = 1
+	</select>
+	<!-- score -->
+	<!-- 게스트 이름으로 평점 불러오기 -->
+	<select id="getguestRoomRating" resultType="Double">
+		SELECT ROUND(AVG(RRATING), 2) FROM REVIEW WHERE GNAME = #{gName} AND
+		RISDELETE = 1
+	</select>
+	<!-- 게스트 이름으로 평점 투표자 불러오기 -->
+	<select id="getguestRoomRatingvote" resultType="int">
+		SELECT COUNT(*) FROM REVIEW WHERE GNAME = #{gName} AND RISDELETE = 1
+	</select>
+
+	<!-- notice -->
+
+	<select id="selectNoticeBoardList"
+		resultType="com.koreait.sevenfactory.dto.NoticeDTO">
+		SELECT NNO, MID, NTITLE, NNOTICEDATE, NHIT, NISDELETE FROM NOTICE N,
+		member M WHERE N.NISDELETE =0 AND M.MNO =1 ORDER BY NNO DESC LIMIT
+		#{beginRecord2},5;
+		<!-- NISDELETE 1:삭제 0:존재 -->
+	</select>
+
+	<select id="getTotalRecordNotice" resultType="int">
+		SELECT COUNT(*) FROM NOTICE
+	</select>
+
+	<insert id="insertNoticeBoard">
+		INSERT INTO NOTICE(NNO, MNO, NTITLE, NCONTENT, NFILENAME, NIMG, NHIT,
+		NISDELETE, NNOTICEDATE) VALUES ((SELECT IFNULL(MAX(NNo) + 1, 1) FROM
+		NOTICE AS n), #{param1}, #{param2}, #{param3}, #{param4}, #{param5},
+		0, 0, CURRENT_TIMESTAMP())
+	</insert>
+
+	<select id="selectNoticeBoardBynNo"
+		resultType="com.koreait.sevenfactory.dto.NoticeDTO">
+		SELECT NNO, MID, NTITLE, NCONTENT, NFILENAME, NIMG, NNOTICEDATE, NHIT,
+		NISDELETE FROM NOTICE N, MEMBER M WHERE N.MNO = M.MNO AND NNO = #{nNo}
+	</select>
+
+	<update id="deleteNoticeBoard">
+		UPDATE NOTICE SET NISDELETE = 1 WHERE NNO = #{nNo}
+	</update>
+
+	<update id="updateNoticeBoardHit">
+		UPDATE NOTICE SET NHIT = NHIT + 1 WHERE NNO = #{nNo}
+	</update>
+
+	<!-- 송지섭 -->
+	<!-- 카카오 회원 등록 -->
+	<insert id="kakaoRegistor" parameterType="java.util.HashMap">
+		INSERT INTO MEMBER (MNO, MID, MPW, MNAME, MBIRTH, MPHONE, MEMAIL, MADDR1,
+		MADDR2, MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT)
+		VALUES ((SELECT IFNULL(MAX(MNO) + 1, 1) FROM MEMBER AS m), #{mId},
+		#{mPw}, #{mName},#{mBirth} ,#{mPhone}, #{mEmail}, #{mAddr1},
+		#{mAddr2}, #{mZipcode} ,CURRENT_TIMESTAMP() ,0,2000,0,0)
+	</insert>
+
+	<!-- 아이디로 회원 찾기 -->
+	<select id="selectBymId"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT MNO, MID, MPW, MNAME, MBIRTH, MPHONE, MEMAIL, MADDR1, MADDR2,
+		MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT FROM MEMBER
+		WHERE MID = #{mId}
+	</select>
+	<!-- 카카오 로그인 -->
+	<select id="kakaologin"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT MNO, MID, MPW, MNAME, MBIRTH, MPHONE, MEMAIL, MADDR1, MADDR2,
+		MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT FROM MEMBER
+		WHERE MID=${param1} AND MNAME = #{param2} AND MEMAIL = #{param3} ORDER
+		BY MNO
+	</select>
+	<insert id="insertReservation1">
+		INSERT INTO RESERVATION (RNO, GNO, MNO, NMPHONE, RAPPROVAL, RPEOPLE, RPRICE,
+		RCHECKIN, RCHECKOUT, HNO) VALUES ((SELECT IFNULL(MAX(RNO) + 1, 1) FROM
+		RESERVATION AS re), #{param1}, #{param2}, null,0 , #{param3},
+		#{param4}, #{param5}, #{param6}, #{param7})
+	</insert>
+	<insert id="selectAllgNOinsertReservation2">
+		INSERT INTO RESERVATION (RNO, GNO, MNO, NMPHONE, RAPPROVAL, RPEOPLE, RPRICE,
+		RCHECKIN, RCHECKOUT, HNO) VALUES ((SELECT IFNULL(MAX(RNO) + 1, 1) FROM
+		RESERVATION AS re), #{param1}, 0, #{param2}, 0, #{param3}, #{param4},
+		#{param5}, #{param6}, #{param7})
+	</insert>
+	<select id="guestRoomNoList" parameterType="int"
+		resultType="String">
+		SELECT g.GNAME FROM GUESTROOM AS g WHERE HNO=#{hNo}
+	</select>
+
+	<!-- 사용자 포인트 가져오기 -->
+	<select id="memberPoint" parameterType="String" resultType="int">
+		SELECT MPOINT FROM MEMBER WHERE MID = #{mId}
+	</select>
+
+
+
+	<!-- 회원정보 수정하기 -->
+	<update id="memberUpdate">
+		UPDATE MEMBER SET MPW = #{mPw}, MNAME = #{mName}, MBIRTH=#{mBirth} ,MEMAIL =
+		#{mEmail},
+		MPHONE = #{mPhone}, MZIPCODE = #{mZipcode}, MADDR1 = #{mAddr1}, MADDR2 =
+		#{mAddr2}
+		WHERE MID = #{mId}
+	</update>
+
+	<!-- ajax 를 이용한 mEmail 조회 -->
+	<select id="selectBymEmail"
+		parameterType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT * FROM MEMBER WHERE MEMAIL = #{param1}
+	</select>
+
+	<!-- 회원탈퇴 -->
+	<update id="leaveMember">
+		UPDATE MEMBER SET MISWITHDRAWAL = 1 WHERE MID = #{mId}
+	</update>
+
+
+	<!-- 나의 게시글 보기 -->
+	<select resultType="com.koreait.sevenfactory.dto.QNADTO"
+		id="selectMyBoardList" parameterType="Map">
+		SELECT A.*, (SELECT COUNT(*) FROM REPLY R WHERE R.QNO = A.QNO) COUNT FROM
+		(SELECT * FROM QNA WHERE QISDELETE = 1 AND MID = #{mId}) A ORDER BY
+		QNO DESC LIMIT 0,10;
+	</select>
+
+
+
+	<!-- 관리자! -->
+	<!-- 관리자 전체 회원 리스트 -->
+	<select id="userList"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT A.* FROM ((SELECT * FROM MEMBER ORDER BY MNO DESC) A) LIMIT
+		#{beginRecord},5;
+
+	</select>
+
+	<select id="sellerextendList"
+		resultType="com.koreait.sevenfactory.dto.SellerDTO">
+		SELECT * FROM SELLER WHERE EXTEND = 0 OR EXTEND = 1 LIMIT #{beginRecord},10;
+	</select>
+
+
+	<update id="adminSellerExtendOK">
+		UPDATE SELLER SET EXTEND = 2 WHERE EXTEND = #{param1} AND SNO = #{param2};
+	</update>
+
+	<!-- 관리자 전체 게시글(notice) 리스트 -->
+	<select id="adminNoticeList"
+		resultType="com.koreait.sevenfactory.dto.NoticeDTO">
+		SELECT * FROM NOTICE ORDER BY NNO ASC LIMIT #{beginRecord},5;
+	</select>
+
+	<select id="adminQnaList"
+		resultType="com.koreait.sevenfactory.dto.QNADTO">
+		SELECT * FROM QNA ORDER BY QNO ASC LIMIT #{beginRecord},5;
+	</select>
+
+	<select id="adminReviewList"
+		resultType="com.koreait.sevenfactory.dto.ReviewDTO">
+		SELECT * FROM REVIEW ORDER BY RNO ASC LIMIT #{beginRecord},5;
+	</select>
+
+	<update id="adminSellerReviewDeleteOK">
+		UPDATE REVIEW SET RISDELETE = 0 WHERE MID = #{param1};
+	</update>
+
+	<!-- 관리자 전체 회원 갯수 -->
+	<select id="getTotalMember" resultType="int"> <!-- 전체회원 by 페이징 -->
+		SELECT COUNT(*) FROM MEMBER
+	</select>
+
+	<!-- 관리자 전체 게시글 갯수(강현) -->
+	<select id="getTotalPost" resultType="int"> <!-- 전체게시글 by 페이징 -->
+		SELECT COUNT(*) FROM QNA, NOTICE, REVIEW
+	</select>
+
+	<select id="getTotalQna" resultType="int"> <!-- 전체게시글 by 페이징 -->
+		SELECT COUNT(QNA.QNO) FROM QNA;
+	</select>
+
+	<select id="getTotalNotice" resultType="int"> <!-- 전체게시글 by 페이징 -->
+		SELECT COUNT(notice.NNO) FROM NOTICE;
+	</select>
+
+	<select id="getTotalReview" resultType="int"> <!-- 전체게시글 by 페이징 -->
+		SELECT COUNT(review.rNO) FROM REVIEW;
+	</select>
+
+	<!-- 관리자 회원 상세보기 -->
+	<select id="selectBymNo"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO">
+		SELECT MNO, MID, MPW, MNAME, MBIRTH, MPHONE ,MEMAIL, MADDR1, MADDR2,
+		MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT FROM MEMBER
+		WHERE MNO = #{mNo}
+	</select>
+
+	<!-- 관리자 회원 추가하기 -->
+	<insert id="userInsert"
+		parameterType="com.koreait.sevenfactory.dto.MemberDTO">
+		INSERT INTO MEMBER (MNO, MID, MPW, MNAME, MBIRTH, MPHONE, MEMAIL, MADDR1,
+		MADDR2, MZIPCODE, MREGDATE, MGRADE, MPOINT, MISWITHDRAWAL, MRIGHT)
+		VALUES ((SELECT IFNULL(MAX(MNO) + 1, 1) FROM MEMBER AS m), #{mId},
+		#{mPw}, #{mName}, #{mBirth}, #{mPhone}, #{mEmail}, #{mAddr1},
+		#{mAddr2}, #{mZipcode}, CURRENT_TIMESTAMP() , 0, 0, 0, 0)
+	</insert>
+
+	<!-- 관리자가 회원 탈퇴시키기 1: 탈퇴 0: 유지 -->
+	<update id="userLeave">
+		UPDATE MEMBER SET MISWITHDRAWAL = 1 WHERE MID = #{mId}
+	</update>
+
+	<!-- 관리자 권한(1) 부여하기 -->
+	<update id="changeAdmin">
+		UPDATE MEMBER SET MRIGHT = 1 WHERE MID = #{mId}
+	</update>
+	<!-- 일반회원 권한(0) 부여하기 -->
+	<update id="changeUser">
+		UPDATE MEMBER SET MRIGHT = 0 WHERE MID = #{mId}
+	</update>
+
+	<!-- 회원검색하기 -->
+	<select id="queryAdminList" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO"><!-- 정렬된 테이블을 A라 부르고 ROWNUM을 쓸수 있게 부착, -->
+		SELECT * FROM MEMBER
+		<if test="column=='MNAME'">WHERE MNAME LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='MID'">WHERE MID LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='MADDR1'">WHERE MADDR1 LIKE CONCAT('%',#{query},'%')</if>
+	</select>
+	
+	<!-- QNA게시글 검색하기  -->
+	<select id="queryAdminQNAList" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.QNADTO"><!-- 정렬된 테이블을 A라 부르고 ROWNUM을 쓸수 있게 부착, -->
+		SELECT * FROM QNA
+		<if test="column=='TITLE'">WHERE QTITLE LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='CONTENT'">WHERE QCONTENT LIKE CONCAT('%',#{query},'%')</if>
+	</select>
+	
+	<!-- NOTICE게시글 검색하기  -->
+	<select id="queryAdminNOTICEList" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.NoticeDTO"><!-- 정렬된 테이블을 A라 부르고 ROWNUM을 쓸수 있게 부착, -->
+		SELECT * FROM NOTICE
+		<if test="column=='TITLE'">WHERE NTITLE LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='CONTENT'">WHERE NCONTENT LIKE CONCAT('%',#{query},'%')</if>
+	</select>
+
+	<!-- REVIEW게시글 검색하기  -->
+	<select id="queryAdminREVIEWList" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.ReviewDTO"><!-- 정렬된 테이블을 A라 부르고 ROWNUM을 쓸수 있게 부착, -->
+		SELECT * FROM REVIEW
+		<if test="column=='TITLE'">WHERE RTITLE LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='CONTENT'">WHERE RCONTENT LIKE CONCAT('%',#{query},'%')</if>
+	</select>
+	
+	<!-- // 검색된 게시글 개수 구하기 -->
+	<select id="getQueryRecord" parameterType="Map" resultType="int">
+		SELECT COUNT(*) FROM MEMBER
+		<if test="column=='MNAME'">WHERE MNAME LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='MID'">WHERE MID LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='MADDR1'">WHERE MADDR1 LIKE CONCAT('%',#{query},'%')</if>
+	</select>
+	
+	<select id="queryAdminList2" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.MemberDTO"><!-- 정렬된 테이블을 A라 부르고 ROWNUM을 쓸수 있게 부착, -->
+		SELECT * FROM MEMBER
+		<if test="column=='MNAME'">WHERE MNAME LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='MID'">WHERE MID LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='MADDR1'">WHERE MADDR1 LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='CHOOSE'">WHERE MNAME LIKE CONCAT('%',#{query},'%') OR MID LIKE
+			CONCAT('%',#{query},'%') OR MADDR1 LIKE CONCAT('%',#{query},'%')</if>
+		LIMIT 0,5;
+	</select>
+
+	<!-- 검색된 레코드 개수. -->
+	<select id="getQueryQNARecord" resultType="int">
+		SELECT COUNT(*) FROM QNA
+		<if test="column=='TITLE'">WHERE QTITLE LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='CONTENT'">WHERE QCONTENT LIKE CONCAT('%',#{query},'%')</if>
+	</select>
+	
+	<select id="getQueryNOTICERecord" resultType="int">
+		SELECT COUNT(*) FROM NOTICE
+		<if test="column=='TITLE'">WHERE NTITLE LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='CONTENT'">WHERE NCONTENT LIKE CONCAT('%',#{query},'%')</if>
+	</select>
+	
+	<select id="getQueryREVIEWRecord" resultType="int">
+		SELECT COUNT(*) FROM REVIEW
+		<if test="column=='TITLE'">WHERE RTITLE LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='CONTENT'">WHERE RCONTENT LIKE CONCAT('%',#{query},'%')</if>
+	</select>
+
+	<select id="countReservation" resultType="int">
+		SELECT COUNT(*) FROM RESERVATION
+	</select>
+
+	<!-- 전체 예약현황_리스트 -->
+	<select id="reservationList" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.ReservationViewDTO">
+		SELECT M.MID, R.RNO, M.MNAME, G.GNAME, R.RCHECKIN,R.RCHECKOUT, R.RPEOPLE,
+		R.RAPPROVAL FROM MEMBER M, GUESTROOM G,RESERVATION R WHERE M.MNO =
+		R.MNO AND R.GNO = G.GNO UNION ALL SELECT N.NMID, R.RNO, N.NMNAME,
+		G.GNAME, R.RCHECKIN, R.RCHECKOUT, R.RPEOPLE, R.RAPPROVAL FROM
+		NONMEMBER N, GUESTROOM G, RESERVATION R WHERE N.NMID = R.NMID AND
+		R.GNO = G.GNO LIMIT 0,5;
+	</select>
+	<select id="getTotalReservationCount" resultType="int">
+		SELECT COUNT(*) FROM RESERVATION
+	</select>
+
+	<!-- 미승인 & 승인 호텔 list -->
+	<select id="hotelnoapprovalList"
+		resultType="com.koreait.sevenfactory.dto.HotelDTO">
+		SELECT A.* FROM ((SELECT * FROM HOTEL ORDER BY HNO DESC) A);
+	</select>
+
+	<!-- 호텔승인 -->
+	<update id="adminHotelApproval" parameterType="int">
+		UPDATE HOTEL SET HAPPROVAL = 1 WHERE HNO = #{hNo}
+	</update>
+
+	<!-- 전체호텔 개수 -->
+	<select id="getTotalHotel" resultType="int"> <!-- 전체회원 by 페이징 -->
+		SELECT COUNT(*) FROM HOTEL
+	</select>
+	<!-- 사업자 리스트 -->
+	<select id="adminsellerlist"
+		resultType="com.koreait.sevenfactory.dto.SellerDTO">
+		SELECT A.* FROM ((SELECT * FROM SELLER ORDER BY SNO DESC) A);
+	</select>
+	<!-- 전체 사업자수 -->
+	<select id="getSellerHotel" resultType="int"> <!-- 전체회원 by 페이징 -->
+		SELECT COUNT(*) FROM SELLER
+	</select>
+
+	<!-- 관리자페이지 사업자 리뷰삭제 리스트(2022.10.20) -->
+	<select id="adminDReviewList"
+		resultType="com.koreait.sevenfactory.dto.ReviewDTO">
+		SELECT RV.MID, RV.RTITLE, RV.RREGDATE, RV.GNAME, RV.RRATING , RV.RISDELETE FROM HOTEL HT LEFT JOIN SELLER SL ON SL.HNAME = HT.HNAME 
+		LEFT JOIN GUESTROOM GR ON GR.HNO = HT.HNO LEFT JOIN REVIEW RV ON RV.GNAME = GR.GNAME WHERE NOT RV.RTITLE IS NULL;
+	</select>
+	<!-- ****************************************************************************************************************************************************************** -->
+	<!-- 전체 예약현황 - 검색하기 -->
+	<select id="queryAdminReservationList" parameterType="Map"
+		resultType="com.koreait.sevenfactory.dto.ReservationViewDTO"><!-- 정렬된 테이블을 A라 부르고 ROWNUM을 쓸수 있게 부착, -->
+		SELECT M.MID, R.RNO, M.MNAME, G.GNAME, R.RCHECKIN,
+		R.RCHECKOUT,R.RPEOPLE, R.RAPPROVAL FROM MEMBER M, GUESTROOM G,
+		RESERVATION R WHERE M.MNO = R.MNO AND R.GNO = G.GNO
+		<if test="column=='MNAME'"> AND M.MNAME LIKE CONCAT('%',#{query},'%')</if>
+		<if test="column=='GNAME'">AND G.GNAME LIKE CONCAT('%', #{query}, '%')</if>
+	</select>
+
+	<!-- 전체 예약현황 - 검색된 예약 총 갯수 -->
+	<select id="getQueryReservationRecord" parameterType="Map"
+		resultType="int">
+		SELECT COUNT(*) FROM RESERVATION R, GUESTROOM G, MEMBER M WHERE M.MNO
+		= R.MNO AND R.GNO = G.GNO
+		<if test="column=='MID'">AND M.MID LIKE CONCAT('%', #{query}, '%')</if>
+		<if test="column=='MNAME'">AND M.MNAME LIKE CONCAT('%', #{query}, '%')</if>
+		<if test="column=='GNAME'">AND G.GNAME LIKE CONCAT('%', #{query}, '%')</if>
+	</select>
+	<!-- ****************************************************************************************************************************************************************** -->
+
+	<!-- 전체 예약현황_예약승인하기 -->
+	<update id="adminReservationOK" parameterType="int">
+		UPDATE RESERVATION SET RAPPROVAL = 1 WHERE RNO = #{rNo}
+	</update>
+
+	<!-- 전체 예약현황_미승인된 예약취소하기 -->
+	<delete id="adminReservationCancel" parameterType="int">
+		DELETE FROM RESERVATION WHERE RNO = #{rNo}
+	</delete>
+	<!-- 전체 예약현황_승인된 예약 삭제하기 -->
+	<delete id="adminReservationDelete" parameterType="int">
+		DELETE FROM RESERVATION WHERE RNO = #{rNo}
+	</delete>
+
+	<!-- ****************************************************************************************************************************************************************** -->
+
+	<!-- 사업자 회원가입 -->
+	<insert id="sellerregistor"
+		parameterType="com.koreait.sevenfactory.dto.SellerDTO">
+   <![CDATA[
+   INSERT INTO SELLER (SNO, SID, SNUMBER, HNAME, SPHONE, SPW, SEMAIL,SREGDATE,SENDDATE,EXTEND) VALUES ((SELECT IFNULL(MAX(SNO) + 1,1) FROM SELLER AS s), #{sId}, #{sNumber}, CONCAT("미승인호텔",(SELECT IFNULL(MAX(SNO) + 1,1) FROM SELLER AS s)),#{sPhone}, #{sPw}, #{sEmail},now(), DATE_ADD(now(), INTERVAL 6 MONTH),0)
+   ]]>
+	</insert>
+
+	<!-- 호텔 더미 insert -->
+	<insert id="sellerhotelinsert1">
+   <![CDATA[
+   INSERT INTO HOTEL (HNO, HNAME, HADDRESS, HTHUMBNAIL, HAMOUNT, HMINPRICE, HAPPROVAL) VALUES ((SELECT IFNULL(MAX(HNO) + 1,1) FROM HOTEL AS h), CONCAT("미승인호텔",(SELECT IFNULL(MAX(HNO) + 1,1) FROM HOTEL AS h)),"대전광역시 서구 대덕대로 182",CONCAT("hotel",(SELECT IFNULL(MAX(HNO) + 1,1) FROM HOTEL AS h)),0,0,0)
+   ]]>
+	</insert>
+	<!-- 호텔 더미 이름 호텔에서 뽑기 -->
+	<select id="hotelName1" resultType="String"
+		parameterType="String">
+		SELECT HNAME FROM HOTEL WHERE HNO = (SELECT IFNULL(MAX(HNO),1) FROM HOTEL AS
+		h)
+	</select>
+	<!-- 호텔 더미 이름 뽑기 -->
+	<select id="hotelName" resultType="String"
+		parameterType="String">
+		SELECT HNAME FROM SELLER WHERE SID = #{sId}
+	</select>
+
+	<!-- 호텔 INSERT -> UPDATE -->
+	<insert id="sellerhotelregistor">
+   <![CDATA[
+   UPDATE HOTEL SET HNAME = #{hName} , HADDRESS = #{hAddress} , HAMOUNT=#{hAmount}, HMINPRICE = #{hMinprice} WHERE HNO = (SELECT IFNULL(MAX(HNO),1) FROM HOTEL AS h)
+   ]]>
+	</insert>
+
+	<!-- 사업자 로그인 -->
+	<select id="sellerlogin"
+		resultType="com.koreait.sevenfactory.dto.SellerDTO">
+		SELECT * FROM SELLER WHERE SID = #{param1} AND SPW = #{param2} ORDER BY SNO
+	</select>
+
+	<select id="sellerByid"
+		resultType="com.koreait.sevenfactory.dto.SellerDTO">
+		SELECT * FROM SELLER WHERE SID = #{param1}
+	</select>
+
+	<!--사업자 비밀번호찾기 -->
+	<select id="findSellerPw"
+		resultType="com.koreait.sevenfactory.dto.SellerDTO">
+		SELECT * FROM SELLER WHERE SID = #{param1} AND SEMAIL =#{param2}
+	</select>
+
+	<!--사업자 비밀번호 변경 -->
+	<update id="changeSellerPw">
+		UPDATE SELLER SET SPW = #{param1} WHERE SID = #{param2}
+	</update>
+	<!-- 사업자 아이디 체크 -->
+	<select id="sidCheck"
+		resultType="com.koreait.sevenfactory.dto.SellerDTO">
+		SELECT * FROM SELLER WHERE SID = #{sId}
+	</select>
+	<!-- 사업자 이메일 체크 -->
+	<select id="semailCheck"
+		resultType="com.koreait.sevenfactory.dto.SellerDTO">
+		SELECT * FROM SELLER WHERE SEMAIL = #{sEmail}
+	</select>
+	<!-- 사업자 전화번호 체크 -->
+	<select id="sphoneCheck"
+		resultType="com.koreait.sevenfactory.dto.SellerDTO">
+		SELECT * FROM SELLER WHERE SPHONE = #{sPhone}
+	</select>
+
+	<!-- 사업자 연장 요청 -->
+	<select id="selectSellerExtendRequest"
+		resultType="com.koreait.sevenfactory.dto.SellerDTO">
+		SELECT * FROM SELLER WHERE SID = #{param1};
+	</select>
+	<!-- SELECT * FROM SELLER WHERE EXTEND = #{param1} AND SID = #{param2}; -->
+	<!-- 난 강현! 막내를 담당하고있을줄 알았지? 맞아! -->
+	<update id="updateSellerExtendRequest">
+		UPDATE SELLER SET EXTEND = 1 WHERE SID = #{param1}
+	</update>
+
+	<!-- 사업자 블랙리스트 요청 -->
+	<insert id="blacklist1"
+		parameterType="com.koreait.sevenfactory.dto.BlackListDTO">
+		INSERT INTO BLACKLIST(BNO,MID, BREASON, BRIGHT) VALUES((SELECT
+		IFNULL(MAX(BNO) + 1, 1) FROM BLACKLIST AS b),#{mId}, #{bReason}, 0)
+	</insert>
+	<!-- 사업자 리뷰 -->
+	<update id="updateSellerReviewRequest">
+		UPDATE REVIEW SET RISDELETE = 2 WHERE RNO = #{param1}
+	</update>
+
+	<!-- 사업자페이지 = 리뷰삭제 요청(2022.10.20) -->
+	<select id="selectSellerReviewRequest"
+		resultType="com.koreait.sevenfactory.dto.ReviewDTO">
+		SELECT RV.RNO, RV.MID, RV.RTITLE, RV.RREGDATE, RV.GNAME, RV.RRATING,
+		RV.RISDELETE FROM HOTEL HT LEFT JOIN SELLER SL ON SL.HNAME = HT.HNAME
+		LEFT JOIN GUESTROOM GR ON GR.HNO = HT.HNO LEFT JOIN REVIEW RV ON
+		RV.GNAME = GR.GNAME WHERE NOT RV.RTITLE IS NULL AND SL.SID = #{sId};
+	</select>
+
+
+	<!-- 7.가져온 값(bDTO=blacklistDTO에 넣어준)을 쓰기위해 가져옴 -->
+	<!-- ****************************************************************************************************************************************************************** -->
+	<!-- 관리자 블랙리스트 승인/리스트 불러오기 -->
+	<select id="mright"
+		resultType="com.koreait.sevenfactory.dto.BlackListDTO">
+		SELECT * FROM BLACKLIST WHERE BRIGHT = 0
+	</select>
+
+	<update id="blackagree">
+		UPDATE BLACKLIST SET BRIGHT= 1 WHERE BNO = #{bNo}
+	</update>
+
+	<delete id="blackdisagree" parameterType="int">
+		DELETE FROM BLACKLIST WHERE BNO = #{bNo}
+	</delete>
+
+	<!-- 사업자 예약내역리스트 불러오기 -->
+	<select id="sellerreservation"
+		resultType="com.koreait.sevenfactory.dto.ReservationDTO">
+		SELECT * FROM reservation AS R where r.HNO = (SELECT HT.HNO FROM HOTEL HT
+		LEFT JOIN SELLER SL ON (SELECT HNAME FROM seller WHERE SID = #{sId}) =
+		HT.HNAME AND SL.SID = #{sId} WHERE NOT SL.SNO IS NULL);
+	</select>
+
+	<!-- 사업자 예약승인 -->
+	<update id="reservationapproval">
+		UPDATE RESERVATION SET RAPPROVAL = 1 WHERE RNO = #{rNo}
+	</update>
+
+	<!-- 방리스트 -->
+	<select id="guestRoomList1"
+		resultType="com.koreait.sevenfactory.dto.GuestRoomDTO">
+		SELECT * FROM GUESTROOM AS G where G.HNO = (SELECT HT.HNO FROM HOTEL HT LEFT
+		JOIN SELLER SL ON (SELECT HNAME FROM seller WHERE SID = #{sId}) =
+		HT.HNAME AND SL.SID = #{sId} WHERE NOT SL.SNO IS NULL);
+	</select>
+
+	<!-- 이벤트 -->
+	<!-- 사업자 아이디로 hotel이름 갖고오기 -->
+	<select id="hotelNameBySid" resultType="String">
+		SELECT HNAME FROM SELLER WHERE SID = #{sId}
+	</select>
+	<!-- hotel이름으로 호텔 인덱스 갖고오기 -->
+	<select id="hnoByHname" resultType="int">
+		SELECT HNO FROM HOTEL WHERE HNAME = #{param1}
+	</select>
+	<!-- 호텔인덱스로 호텔에 포함된 방 갖고오기 -->
+	<select id="gnameByHno" resultType="String">
+		SELECT gName FROM GUESTROOM WHERE HNO = #{param1}
+	</select>
+	<!-- 사업자 아이디로 event 갖고오기 -->
+	<select id="eventBySid"
+		resultType="com.koreait.sevenfactory.dto.EventDTO">
+		SELECT * FROM EVENT WHERE SID = #{param1}
+	</select>
+
+	<!-- 사업자가 event 추가하기 -->
+	<insert id="insertEvent">
+		INSERT INTO EVENT (ENO, GNAME, EPRICE , ESTART, EEND, EADDITION, ETHUMBNAIL,
+		EXTEND, SID, EAPPROVAL, EDELETE, EREASON,EUPDATE)
+		VALUES ((SELECT IFNULL(MAX(ENO) + 1, 1) FROM EVENT AS re), #{param1},
+		#{param2}, #{param3}, #{param4} , #{param5}, #{param6}, #{param7},
+		#{param8},#{param9},#{param10},#{param11},#{param12})
+	</insert>
+
+	<!-- 연장신청 안 한 event갖고오기 -->
+	<select id="selectEvent"
+		resultType="com.koreait.sevenfactory.dto.EventDTO">
+		SELECT * FROM EVENT WHERE EXTEND = 0
+	</select>
+	<!-- 연장 승인 대기 중이거나 삭제 대기 중인 event 갖고오기 -->
+	<!-- 관리자가 한 번에 관리하기 위해서 -->
+	<select id="selectExtendEvent"
+		resultType="com.koreait.sevenfactory.dto.EventDTO">
+		SELECT * FROM EVENT WHERE EXTEND = 1 OR EDELETE = 1
+	</select>
+	<!-- 이벤트 번호를 통하여 db 안에 있는 승인을 승인 대기로 바꾸기 -->
+	<update id="updateEventApproval">
+		UPDATE EVENT SET eApproval = 1 WHERE ENO = #{eNo}
+	</update>
+	<!-- 사업자 번호와 승인대기 중인 이벤트 갖고오기 -->
+	<select id="gnameBysId"
+		resultType="com.koreait.sevenfactory.dto.EventDTO">
+		SELECT * FROM EVENT WHERE EAPPROVAL = 1 AND SID = #{sId}
+	</select>
+	<!-- 사업자 번호와 이벤트 번호로 연장 승인 요청 -->
+	<update id="updateExtend">
+		UPDATE EVENT SET EXTEND = 1,EUPDATE=#{param3},EREASON=${param4} WHERE SID = #{param1} AND ENO = #{param2}
+	</update>
+	<!-- 사업자 연장일 변경 및 -->
+
+	<!-- 사업자 번호와 이벤트로 삭제 승인 요청 -->
+	<update id="updateDELETE">
+		UPDATE EVENT SET EDELETE = 1 WHERE SID = #{param1} AND ENO = #{param2}
+	</update>
+	<!-- eNO로 event 뽑기 -->
+	<select id="selectUpdateByeNo" resultType="String">
+		SELECT EUPDATE FROM EVENT WHERE ENO = #{eNo}
+	</select>
+	<!-- 이벤트 최종 승인 -->
+	<update id="adminEventExtendOK">
+		UPDATE EVENT SET EXTEND = 0, EEND = #{param2} WHERE ENO = #{param1}
+	</update>
+	<!-- 이벤트 최종 삭제 -->
+	<delete id="adminEventCancleOK">
+		DELETE FROM EVENT WHERE ENO = #{eNo}
+	</delete>
+
+</mapper>
